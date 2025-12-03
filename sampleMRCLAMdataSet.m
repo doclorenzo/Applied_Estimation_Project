@@ -1,107 +1,97 @@
-% UTIAS Multi-Robot Cooperative Localization and Mapping Dataset
-% produced by Keith Leung (keith.leung@robotics.utias.utoronto.ca) 2009
-% Matlab script animateMRCLAMdataSet.m
-% Description: This scripts samples the dataset at fixed intervals 
-% (default is 0.02s). Odometry data is interpolated using the recorded time. % Measurements are rounded to the nearest timestep. 
-% Run this script after loadMRCLAMdataSet.m
+% Sample MRCLAM dataset using struct "data" created by loadMRCLAMdataSet.m
 
 % Option %
 sample_time = 0.02;
-% Option END %
+% END OPTION %
 
-min_time = Robot1_Groundtruth(1,1);
-max_time = Robot1_Groundtruth(end,1);
-for n=2:n_robots
-   eval(['min_time = min(min_time, Robot' num2str(n) '_Groundtruth(1,1));']);
-   eval(['max_time = max(max_time, Robot' num2str(n) '_Groundtruth(end,1));']);
+n_robots = length(data.Robot);
+
+% --- FIND MIN AND MAX TIME ---
+min_time = inf;
+max_time = -inf;
+
+for i = 1:n_robots
+    gt = data.Robot(i).Groundtruth;
+    min_time = min(min_time, gt(1,1));
+    max_time = max(max_time, gt(end,1));
 end
-for n=1:n_robots
-    eval(['Robot' num2str(n) '_Groundtruth(:,1) = Robot' num2str(n) '_Groundtruth(:,1) - min_time;']);
-    eval(['Robot' num2str(n) '_Measurement(:,1) = Robot' num2str(n) '_Measurement(:,1) - min_time;']);
-    eval(['Robot' num2str(n) '_Odometry(:,1) = Robot' num2str(n) '_Odometry(:,1) - min_time;']);
+
+% Shift timestamps
+for i = 1:n_robots
+    data.Robot(i).Groundtruth(:,1)  = data.Robot(i).Groundtruth(:,1)  - min_time;
+    data.Robot(i).Odometry(:,1)     = data.Robot(i).Odometry(:,1)     - min_time;
+    data.Robot(i).Measurement(:,1)  = data.Robot(i).Measurement(:,1)  - min_time;
 end
+
 max_time = max_time - min_time;
-timesteps = floor(max_time/sample_time)+1;
 
-disp(['time ' num2str(min_time) 'is the first timestep (t=0[s])']);
-disp(['sampling time is ' num2str(sample_time) '[s] (' num2str(1/sample_time) '[Hz])']);
-disp(['number of resulting timesteps is ' num2str(timesteps)]);
+% Compute timesteps
+timesteps = floor(max_time/sample_time) + 1;
 
-array_names = { 'Robot1_Groundtruth'; 'Robot1_Odometry'; 
-                'Robot2_Groundtruth'; 'Robot2_Odometry'; 
-                'Robot3_Groundtruth'; 'Robot3_Odometry'; 
-                'Robot4_Groundtruth'; 'Robot4_Odometry'; 
-                'Robot5_Groundtruth'; 'Robot5_Odometry'};
-oldData = 0;
-for name = 1:length(array_names)
-    disp(['sampling ' array_names{name}])
-    eval(['oldData =' array_names{name} ';'])
+disp(['time ', num2str(min_time), ' is first timestep (t=0[s])']);
+disp(['sampling time = ', num2str(sample_time),' [s] (', num2str(1/sample_time), ' Hz)']);
+disp(['resulting timesteps = ', num2str(timesteps)]);
 
-    k = 0;
-    t = 0;
-    i = 1;
-    p = 0;
+% ---------------------------------------
+% RESAMPLE GROUNDTRUTH & ODOMETRY
+% ---------------------------------------
 
-    [nr,nc] = size(oldData);
-    newData = zeros(timesteps,nc);
-    while(t <= max_time)
-        newData(k+1,1) = t;     
-        while(oldData(i,1) <= t);        
-            if(i==nr)
-                break;
+for i = 1:n_robots
+    fields = {'Groundtruth','Odometry'};
+    for f = 1:length(fields)
+
+        old = data.Robot(i).(fields{f});
+        [nr,nc] = size(old);
+
+        new = zeros(timesteps,nc);
+
+        k = 0;
+        t = 0;
+        idx = 1;
+
+        while t <= max_time
+            new(k+1,1) = t;
+
+            % find interval
+            while old(idx,1) <= t
+                if idx == nr
+                    break;
+                end
+                idx = idx + 1;
             end
-            i = i + 1;
-        end
-        if(i == 1 || i == nr)
-            if(isempty(strfind(array_names{name},'Odo')))
-                newData(k+1,2:end) = oldData(i,2:end);
+
+            % if t outside range -> copy or zero
+            if idx == 1 || idx == nr
+                new(k+1,2:end) = old(idx,2:end);
             else
-                newData(k+1,2:end) = 0;
-            end
-        else
-            p = (t - oldData(i-1,1))/(oldData(i,1) - oldData(i-1,1));
-            if(nc == 8) % i.e. ground truth data
-                sc = 3;
-                newData(k+1,2) = oldData(i,2); % keep id number 
-            else
-                sc = 2;
-            end
-            for c = sc:nc
-                if(nc==8 && c>=6)
-                    d = oldData(i,c) - oldData(i-1,c);
-                    if d > pi
-                        d = d - 2*pi;
-                    elseif d < -pi
-                        d = d + 2*pi;
-                    end
-                    newData(k+1,c) = p*d + oldData(i-1,c);
-                else
-                    newData(k+1,c) = p*(oldData(i,c) - oldData(i-1,c)) + oldData(i-1,c);
+                % interpolate linearly
+                p = (t - old(idx-1,1)) / (old(idx,1) - old(idx-1,1));
+                for c = 2:nc
+                    new(k+1,c) = old(idx-1,c) + p * (old(idx,c) - old(idx-1,c));
                 end
             end
+
+            k = k + 1;
+            t = t + sample_time;
         end
-        k = k + 1;
-        t = t + sample_time;
-    end
 
-    eval([array_names{name} '= newData ;'])
+        data.Robot(i).(fields{f}) = new;
+    end
 end
 
-array_names = { 'Robot1_Measurement'; 
-                'Robot2_Measurement'; 
-                'Robot3_Measurement';
-                'Robot4_Measurement';
-                'Robot5_Measurement'};
-oldData = 0;
-for name = 1:length(array_names)
-    disp(['prcoessing ' array_names{name}])
-    eval(['oldData =' array_names{name} ';'])
-    newData=oldData;
-    for i = 1:length(oldData)
-        newData(i,1) = floor(oldData(i,1)/sample_time + 0.5)*sample_time; 
+% ---------------------------------------
+% RESAMPLE MEASUREMENTS (round to nearest timestep)
+% ---------------------------------------
+
+for i = 1:n_robots
+    M = data.Robot(i).Measurement;
+    Mnew = M;
+
+    for j = 1:size(M,1)
+        Mnew(j,1) = floor(M(j,1)/sample_time + 0.5)*sample_time;
     end
-    eval([array_names{name} '= newData ;'])
+
+    data.Robot(i).Measurement = Mnew;
 end
 
-clear min_time oldData newData nr nc n p sc t k c i d array_names name;
-
+disp('Sampling complete.');
