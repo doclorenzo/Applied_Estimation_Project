@@ -1,6 +1,7 @@
 # SLAM Evaluation and Visualization
 
 [![Read Paper](https://img.shields.io/badge/Read_Paper-PDF-red.svg)](./Paper.pdf)
+![Visits](https://visitor-badge.laobi.icu/badge?page_id=doclorenzo.Applied_Estimation_Project)
 
 This repository contains implementations of **FastSLAM 1.0** and **EKF-SLAM** on the MRCLAM dataset, together with tools for evaluation and visualization.
 
