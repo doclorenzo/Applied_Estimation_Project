@@ -16,8 +16,12 @@ These scripts:
 
 They are intended for **offline evaluation and benchmarking**.
 You should see something like:
-![Trajectory error. The black dashed line represents groundtruth, while the blue one stands for the estimated path](./plots_images/ekf_trajvsGT_ATE.png)
-![Estimated map, compared to groundtruth](./plots_images/fastslam_best_landmarkvsGT_plot.png)
+
+<p align="center">
+  <img src="./plots_images/ekf_trajvsGT_ATE.png" width="48%" />
+  <img src="./plots_images/fastslam_best_landmarkvsGT_plot.png" width="38%" /> 
+</p>
+
 
 ## Real-Time SLAM Visualization
 
