@@ -20,8 +20,8 @@ They are intended for **offline evaluation and benchmarking**.
 You should see something like:
 
 <p align="center">
-  <img src="./plots_images/ekf_trajvsGT_ATE.png" width="45%" />
-  <img src="./plots_images/fastslam_best_landmarkvsGT_plot.png" width="45%" /> 
+  <img src="./plots_images/ekf_trajvsGT_ATE.png" width="90%" />
+  <img src="./plots_images/fastslam_best_landmarkvsGT_plot.png" width="50%" /> 
 </p>
 
 ## Real-Time SLAM Visualization
