@@ -15,6 +15,13 @@ These scripts:
 - Produce quantitative error plots (ATE, RPE, landmark RMSE)
 
 They are intended for **offline evaluation and benchmarking**.
+You should see something like:
+
+<p align="center">
+  <img src="./plots_images/ekf_trajvsGT_ATE.png"  />
+  <img src="./plots_images/fastslam_best_landmarkvsGT_plot.png" width="50%" /> 
+</p>
+
 
 ## Real-Time SLAM Visualization
 
