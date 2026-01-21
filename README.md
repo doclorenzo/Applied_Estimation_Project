@@ -1,4 +1,4 @@
-# SLAM Evaluation and Visualization
+# EKF-SLAM and FastSLAM1.0 Evaluation and Visualization
 
 [![Read Paper](https://img.shields.io/badge/Read_Paper-PDF-red.svg)](./Paper.pdf)
 ![Visits](https://visitor-badge.laobi.icu/badge?page_id=doclorenzo.Applied_Estimation_Project)
